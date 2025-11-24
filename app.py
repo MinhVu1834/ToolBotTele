@@ -18,9 +18,6 @@ CSKH_LINK = "https://t.me/my_oanh_u888"
 LIVE_LINK = "https://live.u88899.com/"
 CODE_LIVESTREAM_LINK = "https://u888code.com/"
 
-# Nếu bạn có link ảnh banner, sửa vào đây (hoặc dùng file_id Telegram)
-BANNER_URL = "https://example.com/your-banner.jpg"  # TODO: thay bằng link ảnh/banner thật
-
 # ================== KHỞI TẠO BOT & FLASK ==================
 
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
@@ -30,47 +27,19 @@ server = Flask(__name__)
 user_state = {}  # {chat_id: "WAITING_USERNAME"}
 
 
-# ================== GỬI BANNER + CONTENT GIỚI THIỆU (TUỲ CHỌN) ==================
-def send_intro_banner_and_text(chat_id):
-    """
-    Gửi ảnh banner + đoạn content giới thiệu U888.
-    Nếu chưa có link ảnh, bạn có thể tạm thời comment send_photo lại.
-    """
-    try:
-        # Gửi ảnh banner (nếu có URL/file_id hợp lệ)
-        bot.send_photo(chat_id, BANNER_URL)
-    except Exception as e:
-        print("Lỗi gửi banner (bạn nhớ sửa BANNER_URL cho đúng):", e)
-
-    intro_text = (
-        "🎉 ĐĂNG KÝ TÀI KHOẢN – NHẬN NGAY 88K TRẢI NGHIỆM\n\n"
-        "💸 LÊN VỐN – NHẬN KHUYẾN MÃI CỰC CAO TẠI U888\n\n"
-        "🎲 Ưu đãi Baccarat (BCR) mỗi ngày:\n\n"
-        "Chơi 5 tay THẮNG THÔNG → Thưởng 200K\n"
-        "Chơi 5 tay THUA THÔNG → Vẫn nhận 200K\n\n"
-        "⏰ 20H hằng ngày – 📺 Xem livestream săn CODE 38K – 888K siêu khủng!\n\n"
-        "🔥 Cam kết U888\n"
-        "✨ Nói được – Làm được\n"
-        "⚡ Rút tiền nhanh chỉ sau 1 vòng cược\n"
-        f"📩 CSKH hỗ trợ 24/7: {CSKH_LINK}"
-    )
-    bot.send_message(chat_id, intro_text)
-
-
 # ================== HỎI TRẠNG THÁI TÀI KHOẢN ==================
 def ask_account_status(chat_id):
-    # GỬI ẢNH BANNER TRƯỚC
-    # CÁCH 1: dùng URL ảnh
+    """
+    Gửi 1 ảnh + đoạn hỏi:
+    - Anh/chị đã có tài khoản chơi U888 chưa?
+    """
+
+    # Ảnh banner đầu tiên
     bot.send_photo(
         chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/10/photo_2025-10-12_21-15-11.jpg"  # đổi thành link ảnh thật của bạn
+        "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png"
     )
 
-    # CÁCH 2: nếu ảnh nằm trên server (ví dụ trong project)
-    # with open("static/banner_u888.png", "rb") as photo:
-    #     bot.send_photo(chat_id, photo)
-
-    # SAU ĐÓ GỬI ĐOẠN TEXT HỎI TÌNH TRẠNG TÀI KHOẢN
     text = (
         "👋 Chào anh/chị!\n"
         "Em là Bot hỗ trợ nhận CODE ưu đãi U888.\n\n"
@@ -87,6 +56,7 @@ def ask_account_status(chat_id):
 
     bot.send_message(chat_id, text, reply_markup=markup)
     user_state[chat_id] = None
+
 
 # ================== MENU 4 NÚT XUẤT HIỆN XUYÊN SUỐT ==================
 def send_main_menu(chat_id):
@@ -118,10 +88,7 @@ def handle_start(message):
     chat_id = message.chat.id
     print(">>> /start from:", chat_id)
 
-    # Gửi banner + content giới thiệu (nếu không muốn, bạn có thể comment dòng dưới)
-    send_intro_banner_and_text(chat_id)
-
-    # Sau đó hỏi trạng thái tài khoản
+    # Vào thẳng hỏi trạng thái tài khoản (ảnh + text)
     ask_account_status(chat_id)
 
 
@@ -134,6 +101,13 @@ def callback_handler(call):
 
     if data == "no_account":
         # Nhánh CHƯA CÓ – ĐĂNG KÝ NGAY
+
+        # Ảnh minh hoạ cho bước đăng ký mới
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png"
+        )
+
         text = (
             "Tuyệt vời, em gửi anh/chị link đăng ký nè 👇\n\n"
             f"🔗 Link đăng ký: {REG_LINK}\n\n"
@@ -159,6 +133,12 @@ def callback_handler(call):
 
 # ================== HỎI TÊN TÀI KHOẢN ==================
 def ask_for_username(chat_id):
+    # Ảnh minh hoạ cho bước nhập tên tài khoản
+    bot.send_photo(
+        chat_id,
+        "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png"
+    )
+
     text = (
         "Dạ ok anh/chị ❤️\n\n"
         "Anh/chị vui lòng gửi đúng *tên tài khoản* để em kiểm tra và duyệt code.\n\n"
@@ -195,6 +175,12 @@ def handle_text(message):
             bot.send_message(ADMIN_CHAT_ID, admin_text)
         except Exception as e:
             print("Lỗi gửi tin cho admin:", e)
+
+        # Ảnh minh hoạ trước khi báo đã nhận tài khoản
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png"
+        )
 
         # Trả lời khách + mở menu 4 nút
         reply_text = (
@@ -261,9 +247,7 @@ def handle_text(message):
 def telegram_webhook():
     print(">>> Got update from Telegram")
     json_str = request.get_data().decode("utf-8")
-    update = telebot.types.Update_de_json(json_str) if hasattr(telebot.types, 'Update_de_json') else telebot.types.Update.de_json(json_str)
-    # Dùng dòng dưới nếu thư viện của bạn là bản chuẩn:
-    # update = telebot.types.Update.de_json(json_str)
+    update = telebot.types.Update.de_json(json_str)
     bot.process_new_updates([update])
     return "OK", 200
 
