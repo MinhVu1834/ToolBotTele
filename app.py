@@ -8,8 +8,8 @@ from flask import Flask, request
 
 # ============ CẤU HÌNH ============
 
-BOT_TOKEN = os.getenv("7983478536:AAHjPiGNCKEFDeEAHNjUV7PtRRE0dHT_WUo")
-ADMIN_CHAT_ID = int(os.getenv("7943735641", "0"))
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 
 REG_LINK = "https://u888x8m.buzz/Register?f=4781047"
 WEBAPP_LINK = "https://m.u8882m.com/mobile/Register?f=4781047"
