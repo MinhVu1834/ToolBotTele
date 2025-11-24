@@ -30,8 +30,47 @@ server = Flask(__name__)
 user_state = {}  # {chat_id: "WAITING_USERNAME"}
 
 
+# ================== GỬI BANNER + CONTENT GIỚI THIỆU (TUỲ CHỌN) ==================
+def send_intro_banner_and_text(chat_id):
+    """
+    Gửi ảnh banner + đoạn content giới thiệu U888.
+    Nếu chưa có link ảnh, bạn có thể tạm thời comment send_photo lại.
+    """
+    try:
+        # Gửi ảnh banner (nếu có URL/file_id hợp lệ)
+        bot.send_photo(chat_id, BANNER_URL)
+    except Exception as e:
+        print("Lỗi gửi banner (bạn nhớ sửa BANNER_URL cho đúng):", e)
+
+    intro_text = (
+        "🎉 ĐĂNG KÝ TÀI KHOẢN – NHẬN NGAY 88K TRẢI NGHIỆM\n\n"
+        "💸 LÊN VỐN – NHẬN KHUYẾN MÃI CỰC CAO TẠI U888\n\n"
+        "🎲 Ưu đãi Baccarat (BCR) mỗi ngày:\n\n"
+        "Chơi 5 tay THẮNG THÔNG → Thưởng 200K\n"
+        "Chơi 5 tay THUA THÔNG → Vẫn nhận 200K\n\n"
+        "⏰ 20H hằng ngày – 📺 Xem livestream săn CODE 38K – 888K siêu khủng!\n\n"
+        "🔥 Cam kết U888\n"
+        "✨ Nói được – Làm được\n"
+        "⚡ Rút tiền nhanh chỉ sau 1 vòng cược\n"
+        f"📩 CSKH hỗ trợ 24/7: {CSKH_LINK}"
+    )
+    bot.send_message(chat_id, intro_text)
+
+
 # ================== HỎI TRẠNG THÁI TÀI KHOẢN ==================
 def ask_account_status(chat_id):
+    # GỬI ẢNH BANNER TRƯỚC
+    # CÁCH 1: dùng URL ảnh
+    bot.send_photo(
+        chat_id,
+        "https://your-domain.com/path/to/banner.png"  # đổi thành link ảnh thật của bạn
+    )
+
+    # CÁCH 2: nếu ảnh nằm trên server (ví dụ trong project)
+    # with open("static/banner_u888.png", "rb") as photo:
+    #     bot.send_photo(chat_id, photo)
+
+    # SAU ĐÓ GỬI ĐOẠN TEXT HỎI TÌNH TRẠNG TÀI KHOẢN
     text = (
         "👋 Chào anh/chị!\n"
         "Em là Bot hỗ trợ nhận CODE ưu đãi U888.\n\n"
@@ -48,7 +87,6 @@ def ask_account_status(chat_id):
 
     bot.send_message(chat_id, text, reply_markup=markup)
     user_state[chat_id] = None
-
 
 # ================== MENU 4 NÚT XUẤT HIỆN XUYÊN SUỐT ==================
 def send_main_menu(chat_id):
