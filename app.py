@@ -63,7 +63,7 @@ def ask_account_status(chat_id):
     # CÁCH 1: dùng URL ảnh
     bot.send_photo(
         chat_id,
-        "https://your-domain.com/path/to/banner.png"  # đổi thành link ảnh thật của bạn
+        "https://km-abcvip.com/wp-content/uploads/2025/10/photo_2025-10-12_21-15-11.jpg"  # đổi thành link ảnh thật của bạn
     )
 
     # CÁCH 2: nếu ảnh nằm trên server (ví dụ trong project)
