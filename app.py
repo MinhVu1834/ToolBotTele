@@ -33,13 +33,6 @@ def ask_account_status(chat_id):
     Gửi 1 ảnh + đoạn hỏi:
     - Anh/chị đã có tài khoản chơi U888 chưa?
     """
-
-    # Ảnh banner đầu tiên
-    bot.send_photo(
-        chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png"
-    )
-
     text = (
         "👋 Chào anh/chị!\n"
         "Em là Bot hỗ trợ nhận CODE ưu đãi U888.\n\n"
@@ -54,7 +47,13 @@ def ask_account_status(chat_id):
     markup.row(btn_have)
     markup.row(btn_no)
 
-    bot.send_message(chat_id, text, reply_markup=markup)
+    bot.send_photo(
+        chat_id,
+        "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png",
+        caption=text,
+        reply_markup=markup
+    )
+
     user_state[chat_id] = None
 
 
@@ -102,12 +101,6 @@ def callback_handler(call):
     if data == "no_account":
         # Nhánh CHƯA CÓ – ĐĂNG KÝ NGAY
 
-        # Ảnh minh hoạ cho bước đăng ký mới
-        bot.send_photo(
-            chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png"
-        )
-
         text = (
             "Tuyệt vời, em gửi anh/chị link đăng ký nè 👇\n\n"
             f"🔗 Link đăng ký: {REG_LINK}\n\n"
@@ -124,7 +117,13 @@ def callback_handler(call):
         except Exception as e:
             print("Lỗi edit_message_reply_markup:", e)
 
-        bot.send_message(chat_id, text, reply_markup=markup)
+        # Ảnh + text cùng 1 message
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png",
+            caption=text,
+            reply_markup=markup
+        )
 
     elif data in ("have_account", "registered_done"):
         # Nhánh ĐÃ CÓ TÀI KHOẢN hoặc MÌNH ĐĂNG KÝ XONG RỒI
@@ -133,12 +132,6 @@ def callback_handler(call):
 
 # ================== HỎI TÊN TÀI KHOẢN ==================
 def ask_for_username(chat_id):
-    # Ảnh minh hoạ cho bước nhập tên tài khoản
-    bot.send_photo(
-        chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png"
-    )
-
     text = (
         "Dạ ok anh/chị ❤️\n\n"
         "Anh/chị vui lòng gửi đúng *tên tài khoản* để em kiểm tra và duyệt code.\n\n"
@@ -146,7 +139,14 @@ def ask_for_username(chat_id):
         "`Tên tài khoản: abc123`"
     )
 
-    bot.send_message(chat_id, text, parse_mode="Markdown")
+    # Ảnh + text trong caption
+    bot.send_photo(
+        chat_id,
+        "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png",
+        caption=text,
+        parse_mode="Markdown"
+    )
+
     user_state[chat_id] = "WAITING_USERNAME"
 
 
@@ -176,19 +176,19 @@ def handle_text(message):
         except Exception as e:
             print("Lỗi gửi tin cho admin:", e)
 
-        # Ảnh minh hoạ trước khi báo đã nhận tài khoản
-        bot.send_photo(
-            chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png"
-        )
-
-        # Trả lời khách + mở menu 4 nút
+        # Ảnh + text xác nhận tài khoản
         reply_text = (
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
             "Hiện tại em đang gửi cho bộ phận kiểm tra để duyệt code cho anh/chị.\n"
             "Trong lúc chờ, anh/chị có thể xem thêm các ưu đãi đặc biệt bên em ở menu dưới nhé 👇"
         )
-        bot.send_message(chat_id, reply_text, parse_mode="Markdown")
+
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png",
+            caption=reply_text,
+            parse_mode="Markdown"
+        )
 
         user_state[chat_id] = None
         send_main_menu(chat_id)
@@ -241,9 +241,6 @@ def handle_text(message):
     bot.send_message(chat_id, "Dạ để nhận code anh/chị bấm /start giúp em nhé ❤️")
 
 
-# ================== WEBHOOK FLASK ==================
-
-@server.route("/webhook", methods=['POST'])
 # ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
 @bot.message_handler(content_types=['photo'])
 def handle_photo_get_file_id(message):
@@ -257,6 +254,10 @@ def handle_photo_get_file_id(message):
     # Gửi trả lại cho bạn để bạn copy luôn trong Telegram
     bot.reply_to(message, f"file_id của ảnh này là:\n`{file_id}`", parse_mode="Markdown")
 
+
+# ================== WEBHOOK FLASK ==================
+
+@server.route("/webhook", methods=['POST'])
 def telegram_webhook():
     print(">>> Got update from Telegram")
     json_str = request.get_data().decode("utf-8")
