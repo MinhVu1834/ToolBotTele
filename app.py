@@ -244,6 +244,19 @@ def handle_text(message):
 # ================== WEBHOOK FLASK ==================
 
 @server.route("/webhook", methods=['POST'])
+# ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
+@bot.message_handler(content_types=['photo'])
+def handle_photo_get_file_id(message):
+    # Lấy bản chất lượng cao nhất
+    photo = message.photo[-1]
+    file_id = photo.file_id
+
+    # In ra log server
+    print(">>> FILE_ID ẢNH:", file_id)
+
+    # Gửi trả lại cho bạn để bạn copy luôn trong Telegram
+    bot.reply_to(message, f"file_id của ảnh này là:\n`{file_id}`", parse_mode="Markdown")
+
 def telegram_webhook():
     print(">>> Got update from Telegram")
     json_str = request.get_data().decode("utf-8")
