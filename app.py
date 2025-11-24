@@ -196,13 +196,30 @@ def handle_text(message):
 
     # --- Xử lý các nút trong menu 4 nút ---
     if text == "Đăng Ký Nhận 88K 🧧":
-        # Gửi link đăng ký 88K
+        # Nội dung hướng dẫn nhận 88K (định dạng Markdown đẹp)
         msg = (
-            "Để nhận 88K trải nghiệm, anh/chị đăng ký tài khoản tại link bên dưới giúp em nhé 👇\n\n"
-            f"🔗 {REG_LINK}"
+            "📱 *Hướng Dẫn Nhận 88K Trải Nghiệm – Bản Sinh Động*\n\n"
+            "1️⃣ *Tải App U888*\n"
+            "⬇️ Tải app về điện thoại để bắt đầu nhận ưu đãi.\n\n"
+            "2️⃣ *Nhập Tên Tài Khoản Hội Viên*\n"
+            "📝 Mở app → điền tên tài khoản → nhấn *Kiểm tra*.\n\n"
+            "3️⃣ *Gửi SMS Xác Minh*\n"
+            "📤 Nhấn *Gửi SMS xác minh* → hệ thống tự chuyển sang SMS.\n"
+            "📨 Gửi tin nhắn theo hướng dẫn → *copy nội dung SMS* và điền vào form nhận 88K.\n\n"
+            "4️⃣ *Xác Nhận & Chờ Cộng Tiền*\n"
+            "✅ Nhấn “Đã gửi tin nhắn”\n"
+            "⏳ Chờ hệ thống khoảng 3–5 phút để cộng điểm vào tài khoản.\n\n"
+            f"👉 Link đăng ký nhận 88K của anh/chị đây ạ:\n🔗 https://88u888.club/"
         )
-        bot.send_message(chat_id, msg)
-        return
+
+    # Gửi ảnh + caption trong một message
+    bot.send_photo(
+        chat_id,
+        "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",  # đổi sang file_id nếu bạn muốn nhanh hơn
+        caption=msg,
+        parse_mode="Markdown"
+    )
+    return
 
     if text == "Chia Sẻ Bạn Bè 👥":
         # Gửi form giới thiệu bạn bè
