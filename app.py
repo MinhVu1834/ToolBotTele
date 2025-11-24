@@ -12,8 +12,14 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 
 REG_LINK = "https://u888x8m.buzz/Register?f=4781047"
-WEBAPP_LINK = "https://m.u8882m.com/mobile/Register?f=4781047"
+WEBAPP_LINK = "https://m.u8882m.com/mobile/Register?f=4781047"  # hiện chưa dùng, để sẵn
 CSKH_LINK = "https://t.me/my_oanh_u888"
+
+LIVE_LINK = "https://live.u88899.com/"
+CODE_LIVESTREAM_LINK = "https://u888code.com/"
+
+# Nếu bạn có link ảnh banner, sửa vào đây (hoặc dùng file_id Telegram)
+BANNER_URL = "https://example.com/your-banner.jpg"  # TODO: thay bằng link ảnh/banner thật
 
 # ================== KHỞI TẠO BOT & FLASK ==================
 
@@ -24,25 +30,41 @@ server = Flask(__name__)
 user_state = {}  # {chat_id: "WAITING_USERNAME"}
 
 
-# ================== NÚT 💥 THAM GIA NGAY ==================
-def send_play_button(chat_id):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    btn = KeyboardButton("💥 Tham gia ngay")
-    markup.add(btn)
-    bot.send_message(
-        chat_id,
-        "Bấm nút 💥 Tham gia ngay bên dưới để vào link đăng ký:",
-        reply_markup=markup
+# ================== GỬI BANNER + CONTENT GIỚI THIỆU (TUỲ CHỌN) ==================
+def send_intro_banner_and_text(chat_id):
+    """
+    Gửi ảnh banner + đoạn content giới thiệu U888.
+    Nếu chưa có link ảnh, bạn có thể tạm thời comment send_photo lại.
+    """
+    try:
+        # Gửi ảnh banner (nếu có URL/file_id hợp lệ)
+        bot.send_photo(chat_id, BANNER_URL)
+    except Exception as e:
+        print("Lỗi gửi banner (bạn nhớ sửa BANNER_URL cho đúng):", e)
+
+    intro_text = (
+        "🎉 ĐĂNG KÝ TÀI KHOẢN – NHẬN NGAY 88K TRẢI NGHIỆM\n\n"
+        "💸 LÊN VỐN – NHẬN KHUYẾN MÃI CỰC CAO TẠI U888\n\n"
+        "🎲 Ưu đãi Baccarat (BCR) mỗi ngày:\n\n"
+        "Chơi 5 tay THẮNG THÔNG → Thưởng 200K\n"
+        "Chơi 5 tay THUA THÔNG → Vẫn nhận 200K\n\n"
+        "⏰ 20H hằng ngày – 📺 Xem livestream săn CODE 38K – 888K siêu khủng!\n\n"
+        "🔥 Cam kết U888\n"
+        "✨ Nói được – Làm được\n"
+        "⚡ Rút tiền nhanh chỉ sau 1 vòng cược\n"
+        f"📩 CSKH hỗ trợ 24/7: {CSKH_LINK}"
     )
+    bot.send_message(chat_id, intro_text)
 
 
 # ================== HỎI TRẠNG THÁI TÀI KHOẢN ==================
 def ask_account_status(chat_id):
     text = (
-        "Chào anh/chị 👋\n"
-        "Em là Bot hỗ trợ nhận CODE ưu đãi.\n\n"
-        "Để nhận code, anh/chị cho em hỏi:\n"
-        "👉 Anh/chị đã có tài khoản chơi chưa ạ?"
+        "👋 Chào anh/chị!\n"
+        "Em là Bot hỗ trợ nhận CODE ưu đãi U888.\n\n"
+        "Để em gửi đúng mã và ưu đãi phù hợp, cho em hỏi một chút ạ:\n\n"
+        "👉 Anh/chị đã có tài khoản chơi U888 chưa ạ?\n\n"
+        "(Chỉ cần bấm nút bên dưới: ĐÃ CÓ hoặc CHƯA CÓ, em hỗ trợ ngay! 😊)"
     )
 
     markup = types.InlineKeyboardMarkup()
@@ -55,13 +77,41 @@ def ask_account_status(chat_id):
     user_state[chat_id] = None
 
 
+# ================== MENU 4 NÚT XUẤT HIỆN XUYÊN SUỐT ==================
+def send_main_menu(chat_id):
+    """
+    Menu 4 nút, 2 hàng x 2 cột:
+    Hàng 1: Đăng Ký Nhận 88K 🧧 | Chia Sẻ Bạn Bè 👥
+    Hàng 2: 🎁 NHẬP CODE Ở LIVESTREAM | 📺 Săn Code lúc 20h hàng ngày
+    """
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+
+    btn_reg_88k = KeyboardButton("Đăng Ký Nhận 88K 🧧")
+    btn_share = KeyboardButton("Chia Sẻ Bạn Bè 👥")
+    btn_code_ls = KeyboardButton("🎁 NHẬP CODE Ở LIVESTREAM")
+    btn_san_code = KeyboardButton("📺 Săn Code lúc 20h hàng ngày")
+
+    markup.row(btn_reg_88k, btn_share)
+    markup.row(btn_code_ls, btn_san_code)
+
+    bot.send_message(
+        chat_id,
+        "Anh/chị chọn 1 trong các mục dưới đây giúp em nhé 👇",
+        reply_markup=markup
+    )
+
+
 # ================== /start ==================
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     chat_id = message.chat.id
     print(">>> /start from:", chat_id)
+
+    # Gửi banner + content giới thiệu (nếu không muốn, bạn có thể comment dòng dưới)
+    send_intro_banner_and_text(chat_id)
+
+    # Sau đó hỏi trạng thái tài khoản
     ask_account_status(chat_id)
-    send_play_button(chat_id)
 
 
 # ================== CALLBACK INLINE ==================
@@ -72,6 +122,7 @@ def callback_handler(call):
     print(">>> callback:", data, "from", chat_id)
 
     if data == "no_account":
+        # Nhánh CHƯA CÓ – ĐĂNG KÝ NGAY
         text = (
             "Tuyệt vời, em gửi anh/chị link đăng ký nè 👇\n\n"
             f"🔗 Link đăng ký: {REG_LINK}\n\n"
@@ -82,41 +133,17 @@ def callback_handler(call):
         btn_done = types.InlineKeyboardButton("✅ MÌNH ĐĂNG KÝ XONG RỒI", callback_data="registered_done")
         markup.row(btn_done)
 
-        bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+        # Xoá inline cũ (nếu muốn) rồi gửi tin mới
+        try:
+            bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+        except Exception as e:
+            print("Lỗi edit_message_reply_markup:", e)
+
         bot.send_message(chat_id, text, reply_markup=markup)
 
-    elif data in ("have_account", "registered_done", "back_to_username"):
+    elif data in ("have_account", "registered_done"):
+        # Nhánh ĐÃ CÓ TÀI KHOẢN hoặc MÌNH ĐĂNG KÝ XONG RỒI
         ask_for_username(chat_id)
-
-    elif data == "back_to_account_status":
-        ask_account_status(chat_id)
-
-    elif data == "bhv_2tay_100":
-        text = (
-            "🛡 BẢO HIỂM VỐN 2 TAY ĐẦU – THUA HOÀN 100%\n\n"
-            "- Áp dụng cho 2 tay đầu theo đúng thể lệ.\n"
-            "- Nếu thua sẽ được hoàn 100% vốn theo quy định.\n\n"
-            "Chi tiết thể lệ anh/chị có thể hỏi trực tiếp CSKH để được tư vấn rõ hơn nhé."
-        )
-        bot.send_message(chat_id, text)
-
-    elif data == "win5_bcr_200":
-        text = (
-            "🏆 NHẬN 200K – THẮNG CHUỖI 5 BCR\n\n"
-            "- Nếu anh/chị thắng liên tiếp 5 tay BCR theo thể lệ chương trình,\n"
-            "- Sẽ được tặng thưởng 200K.\n\n"
-            "Vui lòng giữ lịch sử cược để bên em kiểm tra khi nhận thưởng."
-        )
-        bot.send_message(chat_id, text)
-
-    elif data == "lose5_bcr_200":
-        text = (
-            "💸 NHẬN 200K – THUA CHUỖI 5 BCR\n\n"
-            "- Nếu anh/chị thua liên tiếp 5 tay BCR theo thể lệ chương trình,\n"
-            "- Sẽ được hỗ trợ 200K theo quy định.\n\n"
-            "Vui lòng giữ lịch sử cược để bên em kiểm tra nhé."
-        )
-        bot.send_message(chat_id, text)
 
 
 # ================== HỎI TÊN TÀI KHOẢN ==================
@@ -129,12 +156,6 @@ def ask_for_username(chat_id):
     )
 
     bot.send_message(chat_id, text, parse_mode="Markdown")
-
-    markup_back = types.InlineKeyboardMarkup()
-    btn_back = types.InlineKeyboardButton("⏪ Quay lại bước trước", callback_data="back_to_account_status")
-    markup_back.row(btn_back)
-    bot.send_message(chat_id, "Nếu cần, anh/chị có thể quay lại bước trước:", reply_markup=markup_back)
-
     user_state[chat_id] = "WAITING_USERNAME"
 
 
@@ -145,18 +166,13 @@ def handle_text(message):
     text = message.text.strip()
     print(">>> text:", text, "from", chat_id)
 
-    if text == "💥 Tham gia ngay":
-        markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("👉 Nhấn để đăng ký ngay", url=REG_LINK)
-        markup.add(btn)
-        bot.send_message(chat_id, "Link tham gia của anh/chị đây ạ 👇", reply_markup=markup)
-        return
-
+    # --- Nếu đang chờ user gửi tên tài khoản ---
     if user_state.get(chat_id) == "WAITING_USERNAME":
         username_game = text
         tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
         time_str = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
 
+        # Gửi cho admin
         admin_text = (
             "🔔 Có khách mới gửi thông tin nhận code\n\n"
             f"👤 Telegram: {tg_username}\n"
@@ -169,36 +185,63 @@ def handle_text(message):
         except Exception as e:
             print("Lỗi gửi tin cho admin:", e)
 
+        # Trả lời khách + mở menu 4 nút
         reply_text = (
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
             "Hiện tại em đang gửi cho bộ phận kiểm tra để duyệt code cho anh/chị.\n"
-            "Trong lúc chờ, anh/chị chọn 1 trong các ưu đãi bên dưới giúp em 👇"
+            "Trong lúc chờ, anh/chị có thể xem thêm các ưu đãi đặc biệt bên em ở menu dưới nhé 👇"
         )
-
-        markup = types.InlineKeyboardMarkup()
-        btn1 = types.InlineKeyboardButton(
-            "🛡 BH vốn 2 tay đầu – Thua hoàn 100%", callback_data="bhv_2tay_100"
-        )
-        btn2 = types.InlineKeyboardButton(
-            "🏆 Nhận 200K – Thắng chuỗi 5 BCR", callback_data="win5_bcr_200"
-        )
-        btn3 = types.InlineKeyboardButton(
-            "💸 Nhận 200K – Thua chuỗi 5 BCR", callback_data="lose5_bcr_200"
-        )
-        btn4 = types.InlineKeyboardButton(
-            "⏪ Quay lại sửa tài khoản", callback_data="back_to_username"
-        )
-        markup.row(btn1)
-        markup.row(btn2)
-        markup.row(btn3)
-        markup.row(btn4)
-
-        bot.send_message(chat_id, reply_text, parse_mode="Markdown", reply_markup=markup)
+        bot.send_message(chat_id, reply_text, parse_mode="Markdown")
 
         user_state[chat_id] = None
-        send_play_button(chat_id)
-    else:
-        bot.send_message(chat_id, "Dạ để nhận code anh/chị bấm /start giúp em nhé ❤️")
+        send_main_menu(chat_id)
+        return
+
+    # --- Xử lý các nút trong menu 4 nút ---
+    if text == "Đăng Ký Nhận 88K 🧧":
+        # Gửi link đăng ký 88K
+        msg = (
+            "Để nhận 88K trải nghiệm, anh/chị đăng ký tài khoản tại link bên dưới giúp em nhé 👇\n\n"
+            f"🔗 {REG_LINK}"
+        )
+        bot.send_message(chat_id, msg)
+        return
+
+    if text == "Chia Sẻ Bạn Bè 👥":
+        # Gửi form giới thiệu bạn bè
+        share_text = (
+            "🔗 Mỗi lượt giới thiệu thành công, bạn nhận 1500 đ\n"
+            "- 20K khi bạn bè đăng ký & xác nhận tài khoản.\n"
+            "- 50K khi bạn bè nạp tiền lần đầu!\n\n"
+            "👉 Cách tham gia:\n"
+            "1️⃣ Sao chép link này: https://t.me/my_oanh_u888\n"
+            "2️⃣ Gửi bạn bè của bạn.  ( Đủ 30k để quy đổi )\n\n"
+            "📌 Nhận thưởng ngay khi bạn bè tham gia!\n\n"
+            "⚡️ Giới thiệu càng nhiều, nhận càng lớn!"
+        )
+        bot.send_message(chat_id, share_text)
+        return
+
+    if text == "🎁 NHẬP CODE Ở LIVESTREAM":
+        # Gửi link nhập code
+        msg = (
+            "Anh/chị có thể nhập CODE nhận thưởng trực tiếp tại đây giúp em nhé 👇\n\n"
+            f"🔗 {CODE_LIVESTREAM_LINK}"
+        )
+        bot.send_message(chat_id, msg)
+        return
+
+    if text == "📺 Săn Code lúc 20h hàng ngày":
+        # Gửi link xem livestream săn code
+        msg = (
+            "⏰ 20H hằng ngày anh/chị vào đây xem livestream để săn CODE 38K – 888K siêu khủng nhé 👇\n\n"
+            f"🔗 {LIVE_LINK}"
+        )
+        bot.send_message(chat_id, msg)
+        return
+
+    # --- Mặc định: nếu chat linh tinh ngoài flow ---
+    bot.send_message(chat_id, "Dạ để nhận code anh/chị bấm /start giúp em nhé ❤️")
 
 
 # ================== WEBHOOK FLASK ==================
@@ -207,7 +250,9 @@ def handle_text(message):
 def telegram_webhook():
     print(">>> Got update from Telegram")
     json_str = request.get_data().decode("utf-8")
-    update = telebot.types.Update.de_json(json_str)
+    update = telebot.types.Update_de_json(json_str) if hasattr(telebot.types, 'Update_de_json') else telebot.types.Update.de_json(json_str)
+    # Dùng dòng dưới nếu thư viện của bạn là bản chuẩn:
+    # update = telebot.types.Update.de_json(json_str)
     bot.process_new_updates([update])
     return "OK", 200
 
