@@ -239,7 +239,7 @@ def handle_text(message):
             bot.send_message(chat_id, msg, parse_mode="Markdown")
         return
 
-    if text == "Chia Sẻ Bạn Bè 👥":
+        if text == "Chia Sẻ Bạn Bè 👥":
         share_text = (
             "🔗 Mỗi lượt giới thiệu thành công, bạn nhận 1500 đ\n"
             "- 20K khi bạn bè đăng ký & xác nhận tài khoản.\n"
@@ -250,7 +250,16 @@ def handle_text(message):
             "📌 Nhận thưởng ngay khi bạn bè tham gia!\n\n"
             "⚡️ Giới thiệu càng nhiều, nhận càng lớn!"
         )
-        bot.send_message(chat_id, share_text)
+
+        try:
+            bot.send_photo(
+                chat_id,
+                "AgACAgUAAxkBAAIBn2klsGZWE4iS3UO7E9Kj7OzMHd3NAAIODWsbpw8pVRI3ucG9-ZOaAQADAgADeQADNgQ",   # <-- thay bằng file_id ảnh chia sẻ bạn bè
+                caption=share_text
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh chia sẻ bạn bè:", e)
+            bot.send_message(chat_id, share_text)
         return
 
     if text == "🎁 NHẬP CODE Ở LIVESTREAM":
@@ -258,7 +267,16 @@ def handle_text(message):
             "Anh/chị có thể nhập CODE nhận thưởng trực tiếp tại đây giúp em nhé 👇\n\n"
             f"🔗 {CODE_LIVESTREAM_LINK}"
         )
-        bot.send_message(chat_id, msg)
+
+        try:
+            bot.send_photo(
+                chat_id,
+                "AgACAgUAAxkBAAIBjGklq-uqdpW4yy25J-HRxqGIHAnKAAIDDWsbpw8pVaRLsaHOvgTEAQADAgADeQADNgQ",  # <-- file_id banner nhập code
+                caption=msg
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh nhập code livestream:", e)
+            bot.send_message(chat_id, msg)
         return
 
     if text == "📺 Săn Code lúc 20h hàng ngày":
@@ -266,8 +284,18 @@ def handle_text(message):
             "⏰ 20H hằng ngày anh/chị vào đây xem livestream để săn CODE 38K – 888K siêu khủng nhé 👇\n\n"
             f"🔗 {LIVE_LINK}"
         )
-        bot.send_message(chat_id, msg)
+
+        try:
+            bot.send_photo(
+                chat_id,
+                "AgACAgUAAxkBAAIBnWklsA7Sn1RR4VhqIvQjylGEs_1-AAINDWsbpw8pVX-SihjRXRoFAQADAgADeQADNgQ",  # <-- file_id banner săn code 20h
+                caption=msg
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh săn code 20h:", e)
+            bot.send_message(chat_id, msg)
         return
+
 
     # --- Mặc định: nếu chat linh tinh ngoài flow ---
     bot.send_message(chat_id, "Dạ để nhận code anh/chị bấm /start giúp em nhé ❤️")
