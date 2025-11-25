@@ -276,21 +276,23 @@ def handle_text(message):
 # ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
 @bot.message_handler(content_types=['photo', 'document'])
 def handle_photo_get_file_id(message):
+    # Kiểu dữ liệu thực tế Telegram gửi
     print(">>> CONTENT TYPE:", message.content_type)
 
     if message.content_type == 'photo':
+        # Ảnh gửi kiểu “Photo”
         file_id = message.photo[-1].file_id
     elif message.content_type == 'document':
+        # Ảnh gửi kiểu “File/Tài liệu”
         file_id = message.document.file_id
     else:
-        return
+        return  # Không phải ảnh thì bỏ qua
 
     print(">>> FILE_ID ẢNH:", file_id)
 
     bot.reply_to(
         message,
-        f"file_id của ảnh/file này là:\n`{file_id}`",
-        parse_mode="Markdown"
+        f"file_id của ảnh/file này là:\n{file_id}"
     )
 
 
