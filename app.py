@@ -50,7 +50,7 @@ def ask_account_status(chat_id):
     try:
         bot.send_photo(
             chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png",
+            "BQACAgUAAxkBAAIBZ2klnqw0m6tBmIokAioaOHqhldbZAALdGAACpw8pVdca53YFy9kLNgQ",
             caption=text,
             reply_markup=markup
         )
@@ -125,7 +125,7 @@ def callback_handler(call):
         try:
             bot.send_photo(
                 chat_id,
-                "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png",
+                "BQACAgUAAxkBAAIBaWklnw9iRUT2wflvXwxnLPW68QABFgAC3hgAAqcPKVWZT1KxWSdCYTYE",
                 caption=text,
                 reply_markup=markup
             )
@@ -150,7 +150,7 @@ def ask_for_username(chat_id):
     try:
         bot.send_photo(
             chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png",
+            "AgACAgUAAxkBAAIBa2kln2_x2fvUTdTJH7U4Kl2Z-AABUwAC8AxrG6cPKVVZLLurvibZGAEAAwIAA3kAAzYE",
             caption=text,
             parse_mode="Markdown"
         )
@@ -197,7 +197,7 @@ def handle_text(message):
         try:
             bot.send_photo(
                 chat_id,
-                "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png",
+                "AgACAgUAAxkBAAIBbWkln42l0QufAXVKVmH_Qa6oeFhZAALxDGsbpw8pVY05zyDcJpCbAQADAgADeQADNgQ",
                 caption=reply_text,
                 parse_mode="Markdown"
             )
@@ -230,7 +230,7 @@ def handle_text(message):
         try:
             bot.send_photo(
                 chat_id,
-                "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",
+                "AgACAgUAAxkBAAIBb2kln7uPKrwbAvMH3fUNRQxlIHT6AALyDGsbpw8pVYILLMuU6vZ1AQADAgADeQADNgQ",
                 caption=msg,
                 parse_mode="Markdown"
             )
