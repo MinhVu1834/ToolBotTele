@@ -47,12 +47,17 @@ def ask_account_status(chat_id):
     markup.row(btn_have)
     markup.row(btn_no)
 
-    bot.send_photo(
-        chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png",
-        caption=text,
-        reply_markup=markup
-    )
+    try:
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/08/U88-nhan-thuong-ngay-vang.png",
+            caption=text,
+            reply_markup=markup
+        )
+    except Exception as e:
+        print("Lỗi gửi ảnh ask_account_status:", e)
+        # fallback: gửi text nếu ảnh lỗi
+        bot.send_message(chat_id, text, reply_markup=markup)
 
     user_state[chat_id] = None
 
@@ -117,13 +122,16 @@ def callback_handler(call):
         except Exception as e:
             print("Lỗi edit_message_reply_markup:", e)
 
-        # Ảnh + text cùng 1 message
-        bot.send_photo(
-            chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png",
-            caption=text,
-            reply_markup=markup
-        )
+        try:
+            bot.send_photo(
+                chat_id,
+                "https://km-abcvip.com/wp-content/uploads/2025/09/Dieu-kien-va-luu-y-quan-trong-khi-nhan-thuong-nap-dau-U888.png",
+                caption=text,
+                reply_markup=markup
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh no_account:", e)
+            bot.send_message(chat_id, text, reply_markup=markup)
 
     elif data in ("have_account", "registered_done"):
         # Nhánh ĐÃ CÓ TÀI KHOẢN hoặc MÌNH ĐĂNG KÝ XONG RỒI
@@ -139,13 +147,16 @@ def ask_for_username(chat_id):
         "`Tên tài khoản: abc123`"
     )
 
-    # Ảnh + text trong caption
-    bot.send_photo(
-        chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png",
-        caption=text,
-        parse_mode="Markdown"
-    )
+    try:
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/09/Cach-tham-gia-va-nhan-thuong-chi-tiet-chuong-trinh-Thu-7-Vang-–-U888.png",
+            caption=text,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        print("Lỗi gửi ảnh ask_for_username:", e)
+        bot.send_message(chat_id, text, parse_mode="Markdown")
 
     user_state[chat_id] = "WAITING_USERNAME"
 
@@ -183,12 +194,16 @@ def handle_text(message):
             "Trong lúc chờ, anh/chị có thể xem thêm các ưu đãi đặc biệt bên em ở menu dưới nhé 👇"
         )
 
-        bot.send_photo(
-            chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png",
-            caption=reply_text,
-            parse_mode="Markdown"
-        )
+        try:
+            bot.send_photo(
+                chat_id,
+                "https://km-abcvip.com/wp-content/uploads/2025/09/Diem-noi-bat-khi-tham-gia-su-kien-thu-6-cua-U888.png",
+                caption=reply_text,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh xác nhận username:", e)
+            bot.send_message(chat_id, reply_text, parse_mode="Markdown")
 
         user_state[chat_id] = None
         send_main_menu(chat_id)
@@ -196,7 +211,6 @@ def handle_text(message):
 
     # --- Xử lý các nút trong menu 4 nút ---
     if text == "Đăng Ký Nhận 88K 🧧":
-        # Nội dung hướng dẫn nhận 88K (định dạng Markdown đẹp)
         msg = (
             "📱 *Hướng Dẫn Nhận 88K Trải Nghiệm – Bản Sinh Động*\n\n"
             "1️⃣ *Tải App U888*\n"
@@ -209,20 +223,23 @@ def handle_text(message):
             "4️⃣ *Xác Nhận & Chờ Cộng Tiền*\n"
             "✅ Nhấn “Đã gửi tin nhắn”\n"
             "⏳ Chờ hệ thống khoảng 3–5 phút để cộng điểm vào tài khoản.\n\n"
-            f"👉 Link đăng ký nhận 88K của anh/chị đây ạ:\n🔗 https://88u888.club/"
+            "👉 Link đăng ký nhận 88K của anh/chị đây ạ:\n"
+            "🔗 https://88u888.club/"
         )
 
-        # Gửi ảnh + caption trong một message
-        bot.send_photo(
-            chat_id,
-            "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",  # đổi sang file_id nếu bạn muốn nhanh hơn
-            caption=msg,
-            parse_mode="Markdown"
-        )
+        try:
+            bot.send_photo(
+                chat_id,
+                "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",
+                caption=msg,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh hướng dẫn 88K:", e)
+            bot.send_message(chat_id, msg, parse_mode="Markdown")
         return
 
     if text == "Chia Sẻ Bạn Bè 👥":
-        # Gửi form giới thiệu bạn bè
         share_text = (
             "🔗 Mỗi lượt giới thiệu thành công, bạn nhận 1500 đ\n"
             "- 20K khi bạn bè đăng ký & xác nhận tài khoản.\n"
@@ -237,7 +254,6 @@ def handle_text(message):
         return
 
     if text == "🎁 NHẬP CODE Ở LIVESTREAM":
-        # Gửi link nhập code
         msg = (
             "Anh/chị có thể nhập CODE nhận thưởng trực tiếp tại đây giúp em nhé 👇\n\n"
             f"🔗 {CODE_LIVESTREAM_LINK}"
@@ -246,7 +262,6 @@ def handle_text(message):
         return
 
     if text == "📺 Săn Code lúc 20h hàng ngày":
-        # Gửi link xem livestream săn code
         msg = (
             "⏰ 20H hằng ngày anh/chị vào đây xem livestream để săn CODE 38K – 888K siêu khủng nhé 👇\n\n"
             f"🔗 {LIVE_LINK}"
@@ -261,17 +276,14 @@ def handle_text(message):
 # ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
 @bot.message_handler(content_types=['photo', 'document'])
 def handle_photo_get_file_id(message):
-    # Kiểu dữ liệu thực tế Telegram gửi
     print(">>> CONTENT TYPE:", message.content_type)
 
     if message.content_type == 'photo':
-        # Ảnh gửi kiểu “Photo”
         file_id = message.photo[-1].file_id
     elif message.content_type == 'document':
-        # Ảnh gửi kiểu “File/Tài liệu”
         file_id = message.document.file_id
     else:
-        return  # Không phải ảnh thì bỏ qua
+        return
 
     print(">>> FILE_ID ẢNH:", file_id)
 
@@ -280,6 +292,7 @@ def handle_photo_get_file_id(message):
         f"file_id của ảnh/file này là:\n`{file_id}`",
         parse_mode="Markdown"
     )
+
 
 # ================== WEBHOOK FLASK ==================
 
