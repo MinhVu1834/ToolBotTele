@@ -212,14 +212,14 @@ def handle_text(message):
             f"👉 Link đăng ký nhận 88K của anh/chị đây ạ:\n🔗 https://88u888.club/"
         )
 
-    # Gửi ảnh + caption trong một message
-    bot.send_photo(
-        chat_id,
-        "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",  # đổi sang file_id nếu bạn muốn nhanh hơn
-        caption=msg,
-        parse_mode="Markdown"
-    )
-    return
+        # Gửi ảnh + caption trong một message
+        bot.send_photo(
+            chat_id,
+            "https://km-abcvip.com/wp-content/uploads/2025/11/091735e7-f2a1-4344-ad25-9145d74390b4.jpg",  # đổi sang file_id nếu bạn muốn nhanh hơn
+            caption=msg,
+            parse_mode="Markdown"
+        )
+        return
 
     if text == "Chia Sẻ Bạn Bè 👥":
         # Gửi form giới thiệu bạn bè
