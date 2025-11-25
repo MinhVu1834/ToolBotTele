@@ -50,7 +50,7 @@ def ask_account_status(chat_id):
     try:
         bot.send_photo(
             chat_id,
-            "BQACAgUAAxkBAAIBZ2klnqw0m6tBmIokAioaOHqhldbZAALdGAACpw8pVdca53YFy9kLNgQ",
+            "AgACAgUAAxkBAAIBfWklq1MKg2XIBK3tqH32rSgo4IXcAAICDWsbpw8pVRJBh47k56QWAQADAgADeQADNgQ",
             caption=text,
             reply_markup=markup
         )
@@ -125,7 +125,7 @@ def callback_handler(call):
         try:
             bot.send_photo(
                 chat_id,
-                "BQACAgUAAxkBAAIBaWklnw9iRUT2wflvXwxnLPW68QABFgAC3hgAAqcPKVWZT1KxWSdCYTYE",
+                "AgACAgUAAxkBAAIBb2kln7uPKrwbAvMH3fUNRQxlIHT6AALyDGsbpw8pVYILLMuU6vZ1AQADAgADeQADNgQ",
                 caption=text,
                 reply_markup=markup
             )
