@@ -125,7 +125,7 @@ def callback_handler(call):
         try:
             bot.send_photo(
                 chat_id,
-                "AgACAgUAAxkBAAIBb2kln7uPKrwbAvMH3fUNRQxlIHT6AALyDGsbpw8pVYILLMuU6vZ1AQADAgADeQADNgQ",
+                "AgACAgUAAxkBAAIBl2klrFRo8Jc_nRjNC5lYhd6W2C7QAAIEDWsbpw8pVU1UjNopuH29AQADAgADeQADNgQ",
                 caption=text,
                 reply_markup=markup
             )
