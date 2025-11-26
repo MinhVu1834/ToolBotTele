@@ -201,7 +201,7 @@ def handle_text(message):
     text = message.text.strip()
     print(">>> text:", text, "from", chat_id)
 
-    # --- Nếu đang chờ user gửi tên tài khoản ---\
+    # --- Nếu đang chờ user gửi tên tài khoản ---
     if user_state.get(chat_id) == "WAITING_USERNAME":
         username_game = text
         tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
@@ -367,8 +367,8 @@ def handle_photo_get_file_id(message):
 def telegram_webhook():
     print(">>> Got update from Telegram")
     json_str = request.get_data().decode("utf-8")
-    update = telebot.types.Update_de_json(json_str)  # chú ý: đúng hàm Update.de_json
-    # Nếu dòng trên lỗi tên hàm, dùng: telebot.types.Update.de_json(json_str)
+    # HÀM ĐÚNG: Update.de_json (có dấu chấm, không phải Update_de_json)
+    update = telebot.types.Update.de_json(json_str)
     bot.process_new_updates([update])
     return "OK", 200
 
