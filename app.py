@@ -217,6 +217,8 @@ def handle_text(message):
         )
         try:
             bot.send_message(ADMIN_CHAT_ID, admin_text)
+            # 👉 Forward tin nhắn gốc của khách
+            bot.forward_message(ADMIN_CHAT_ID, chat_id, message.message_id)
         except Exception as e:
             print("Lỗi gửi tin cho admin:", e)
 
