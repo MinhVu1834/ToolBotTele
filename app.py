@@ -99,12 +99,12 @@ def ask_account_status(chat_id):
 def send_main_menu(chat_id):
     """
     Menu 4 nút, 2 hàng x 2 cột:
-    Hàng 1: Đăng Ký Nhận 88K 🧧 | Chia Sẻ Bạn Bè 👥
+    Hàng 1: Nhận thưởng nạp đầu x2 🧧 | Chia Sẻ Bạn Bè 👥
     Hàng 2: 🎁 NHẬP CODE Ở LIVESTREAM | 📺 Săn Code lúc 20h hàng ngày
     """
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
 
-    btn_reg_88k = KeyboardButton("Đăng Ký Nhận 88K 🧧")
+    btn_reg_88k = KeyboardButton("Nhận thưởng nạp đầu x2 🧧")
     btn_share = KeyboardButton("Chia Sẻ Bạn Bè 👥")
     btn_code_ls = KeyboardButton("🎁 NHẬP CODE Ở LIVESTREAM")
     btn_san_code = KeyboardButton("📺 Săn Code lúc 20h hàng ngày")
@@ -244,36 +244,51 @@ def handle_text(message):
         send_main_menu(chat_id)
         return
 
+    # --- Nếu đang chờ khách chọn thể loại game cho ưu đãi nạp đầu x2 ---
+    if user_state.get(chat_id) == "WAITING_GAME_TYPE":
+        if text in ["Bcr - Thể thao", "Nổ hũ - Bắn cá"]:
+            reply_text = (
+                "🎉 Tuyệt vời!\n\n"
+                "Bạn lên vốn thành công vui lòng *gửi hóa đơn chuyển khoản* "
+                "để Bot cộng tiền khuyến mãi x2 cho mình nhé ❤️"
+            )
+
+            try:
+                bot.send_photo(
+                    chat_id,
+                    "AgACAgUAAxkBAAJxxxxxxx_fake_file_id_xxxxxxx",  # 👉 THAY file_id ảnh thật của bạn
+                    caption=reply_text,
+                    parse_mode="Markdown"
+                )
+            except Exception as e:
+                print("Lỗi gửi ảnh nạp đầu:", e)
+                bot.send_message(chat_id, reply_text, parse_mode="Markdown")
+
+            user_state[chat_id] = None
+            send_main_menu(chat_id)
+            return
+        else:
+            # Nếu khách gõ linh tinh chứ không bấm nút
+            bot.send_message(chat_id, "Anh/chị chọn giúp em 1 trong 2 nút bên dưới nhé ạ 😊")
+            return
+
     # ================== MENU 4 NÚT ==================
 
-    # 1. Đăng ký nhận 88K
-    if text == "Đăng Ký Nhận 88K 🧧":
-        msg = (
-            "📱 *Hướng Dẫn Nhận 88K Trải Nghiệm – Bản Sinh Động*\n\n"
-            "1️⃣ *Tải App U888*\n"
-            "⬇️ Tải app về điện thoại để bắt đầu nhận ưu đãi.\n\n"
-            "2️⃣ *Nhập Tên Tài Khoản Hội Viên*\n"
-            "📝 Mở app → điền tên tài khoản → nhấn *Kiểm tra*.\n\n"
-            "3️⃣ *Gửi SMS Xác Minh*\n"
-            "📤 Nhấn *Gửi SMS xác minh* → hệ thống tự chuyển sang SMS.\n"
-            "📨 Gửi tin nhắn theo hướng dẫn → *copy nội dung SMS* và điền vào form nhận 88K.\n\n"
-            "4️⃣ *Xác Nhận & Chờ Cộng Tiền*\n"
-            "✅ Nhấn “Đã gửi tin nhắn”\n"
-            "⏳ Chờ hệ thống khoảng 3–5 phút để cộng điểm vào tài khoản.\n\n"
-            "👉 Link đăng ký nhận 88K của anh/chị đây ạ:\n"
-            "🔗 https://88u888.club/"
+    # 1. Nhận thưởng nạp đầu x2
+    if text == "Nhận thưởng nạp đầu x2 🧧":
+        ask_text = (
+            "🔥 *Ưu đãi nạp đầu x2 dành riêng cho hội viên mới!*\n\n"
+            "Anh/chị thường chơi thể loại nào để em kích hoạt ưu đãi phù hợp?\n\n"
+            "👉 Vui lòng chọn bên dưới nhé:"
         )
 
-        try:
-            bot.send_photo(
-                chat_id,
-                "AgACAgUAAxkBAAIBb2kln7uPKrwbAvMH3fUNRQxlIHT6AALyDGsbpw8pVYILLMuU6vZ1AQADAgADeQADNgQ",
-                caption=msg,
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            print("Lỗi gửi ảnh hướng dẫn 88K:", e)
-            bot.send_message(chat_id, msg, parse_mode="Markdown")
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn_bcr = types.KeyboardButton("Bcr - Thể thao")
+        btn_nohu = types.KeyboardButton("Nổ hũ - Bắn cá")
+        markup.row(btn_bcr, btn_nohu)
+
+        bot.send_message(chat_id, ask_text, reply_markup=markup, parse_mode="Markdown")
+        user_state[chat_id] = "WAITING_GAME_TYPE"
         return
 
     # 2. Chia sẻ bạn bè
