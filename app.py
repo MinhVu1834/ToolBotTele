@@ -14,8 +14,8 @@ from flask import Flask, request
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 
-REG_LINK = "https://u888x8m.buzz/Register?f=4781047"
-WEBAPP_LINK = "https://m.u8882m.com/mobile/Register?f=4781047"  # hiện chưa dùng, để sẵn
+REG_LINK = "https://u888x8m.buzz/Register?f=5059840"
+WEBAPP_LINK = "https://u888x8m.buzz/Register?f=5059840"  # hiện chưa dùng, để sẵn
 CSKH_LINK = "https://t.me/my_oanh_u888"
 
 LIVE_LINK = "https://live.u88899.com/"
