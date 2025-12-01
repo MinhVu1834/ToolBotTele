@@ -256,7 +256,7 @@ def handle_text(message):
             try:
                 bot.send_photo(
                     chat_id,
-                    "AgACAgUAAxkBAAJxxxxxxx_fake_file_id_xxxxxxx",  # 👉 THAY file_id ảnh thật của bạn
+                    "AgACAgUAAxkBAAIE4WktS6ovUsUpgeSrjswY5ipZ8t4sAAJnC2sb-JFwVYktGITzeGDeAQADAgADeQADNgQ",  # 👉 THAY file_id ảnh thật của bạn
                     caption=reply_text,
                     parse_mode="Markdown"
                 )
