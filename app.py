@@ -183,27 +183,25 @@ def handle_text(message):
         game_type = text
 
         try:
-            # gửi ảnh chuyển khoản
-            bot.forward_message(
-                ADMIN_CHAT_ID,
-                chat_id,
-                state["photo_message_id"]
-            )
-
-            # gửi info khách
             tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
-            bot.send_message(
+
+            # Gửi ảnh chuyển khoản cho admin
+            bot.send_photo(
                 ADMIN_CHAT_ID,
-                f"🎮 KHÁCH CHỌN TRÒ CHƠI\n\n"
-                f"👤 Telegram: {tg_username}\n"
-                f"🆔 Chat ID: {chat_id}\n"
-                f"🎯 Trò chơi: {game_type}"
+                state["receipt_file_id"],
+                caption=(
+                    "📩 KHÁCH GỬI CHUYỂN KHOẢN + CHỌN TRÒ CHƠI\n\n"
+                    f"👤 Telegram: {tg_username}\n"
+                    f"🆔 Chat ID: {chat_id}\n"
+                    f"🎯 Trò chơi: {game_type}"
+                )
             )
 
-            bot.send_message(
-                chat_id,
-                "✅ Em đã nhận đủ thông tin, CSKH sẽ xử lý và cộng điểm cho mình sớm nhất nhé ạ ❤️"
-            )
+            bot.send_message(chat_id, "✅ Em đã nhận đủ thông tin, em xử lý và cộng điểm cho mình ngay nhé ạ ❤️")
+        except Exception as e:
+            print("Lỗi gửi admin:", e)
+            bot.send_message(chat_id, "⚠️ Em gửi thông tin bị lỗi, mình đợi em 1 chút hoặc nhắn CSKH giúp em nhé ạ.")
+
         except Exception as e:
             print("Lỗi gửi admin:", e)
 
@@ -237,7 +235,7 @@ def handle_text(message):
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
             "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.\n"
             "Lên thành công mình gửi *ảnh chuyển khoản* để em cộng điểm trực tiếp vào tài khoản cho mình ạ.\n\n"
-            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → https://t.me/my_oanh_u888 "
+            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → @my_oanh_u888"
         )
 
         bot.send_message(chat_id, reply_text, parse_mode="Markdown")
@@ -251,22 +249,29 @@ def handle_text(message):
 
 # ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
 @bot.message_handler(content_types=['photo', 'document'])
-def handle_receipt_photo(message):
+def handle_receipt_media(message):
     chat_id = message.chat.id
 
-    if user_state.get(chat_id) == "WAITING_RECEIPT":
-        # lưu message_id ảnh để gửi cho admin sau
-        user_state[chat_id] = {
-            "state": "WAITING_GAME",
-            "photo_message_id": message.message_id
-        }
-
-        bot.send_message(
-            chat_id,
-            "Mình muốn chơi *BCR - Thể thao*, *Nổ hũ - Bắn cá* hay *Game bài* ạ?",
-            parse_mode="Markdown"
-        )
+    if user_state.get(chat_id) != "WAITING_RECEIPT":
         return
+
+    # Lấy file_id đúng theo loại media
+    if message.content_type == "photo":
+        receipt_file_id = message.photo[-1].file_id
+    else:  # document
+        receipt_file_id = message.document.file_id
+
+    # Lưu lại để lát khách chọn game xong gửi cho admin
+    user_state[chat_id] = {
+        "state": "WAITING_GAME",
+        "receipt_file_id": receipt_file_id
+    }
+
+    bot.send_message(
+        chat_id,
+        "Mình muốn chơi *BCR - Thể Thao*, *Nổ hũ - Bắn Cá* hay *Game bài* ạ?",
+        parse_mode="Markdown"
+    )
 
 
 # ================== WEBHOOK FLASK ==================
