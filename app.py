@@ -95,30 +95,6 @@ def ask_account_status(chat_id):
     user_state[chat_id] = None
 
 
-# ================== MENU 4 NÚT XUẤT HIỆN XUYÊN SUỐT ==================
-def send_main_menu(chat_id):
-    """
-    Menu 4 nút, 2 hàng x 2 cột:
-    Hàng 1: Nhận thưởng nạp đầu x2 🧧 | Chia Sẻ Bạn Bè 👥
-    Hàng 2: 🎁 NHẬP CODE Ở LIVESTREAM | 📺 Săn Code lúc 20h hàng ngày
-    """
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    btn_reg_88k = KeyboardButton("Nhận thưởng nạp đầu x2 🧧")
-    btn_share = KeyboardButton("Chia Sẻ Bạn Bè 👥")
-    btn_code_ls = KeyboardButton("🎁 NHẬP CODE Ở LIVESTREAM")
-    btn_san_code = KeyboardButton("📺 Săn Code lúc 20h hàng ngày")
-
-    markup.row(btn_reg_88k, btn_share)
-    markup.row(btn_code_ls, btn_san_code)
-
-    bot.send_message(
-        chat_id,
-        "Anh/chị chọn 1 trong các mục dưới đây giúp em nhé 👇",
-        reply_markup=markup
-    )
-
-
 # ================== /start ==================
 @bot.message_handler(commands=['start'])
 def handle_start(message):
@@ -201,6 +177,40 @@ def handle_text(message):
     text = message.text.strip()
     print(">>> text:", text, "from", chat_id)
 
+    state = user_state.get(chat_id)
+
+    if isinstance(state, dict) and state.get("state") == "WAITING_GAME":
+        game_type = text
+
+        try:
+            # gửi ảnh chuyển khoản
+            bot.forward_message(
+                ADMIN_CHAT_ID,
+                chat_id,
+                state["photo_message_id"]
+            )
+
+            # gửi info khách
+            tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
+            bot.send_message(
+                ADMIN_CHAT_ID,
+                f"🎮 KHÁCH CHỌN TRÒ CHƠI\n\n"
+                f"👤 Telegram: {tg_username}\n"
+                f"🆔 Chat ID: {chat_id}\n"
+                f"🎯 Trò chơi: {game_type}"
+            )
+
+            bot.send_message(
+                chat_id,
+                "✅ Em đã nhận đủ thông tin, CSKH sẽ xử lý và cộng điểm cho mình sớm nhất nhé ạ ❤️"
+            )
+        except Exception as e:
+            print("Lỗi gửi admin:", e)
+
+        user_state[chat_id] = None
+        return
+    
+
     # --- Nếu đang chờ user gửi tên tài khoản ---
     if user_state.get(chat_id) == "WAITING_USERNAME":
         username_game = text
@@ -225,157 +235,38 @@ def handle_text(message):
         # Ảnh + text xác nhận tài khoản
         reply_text = (
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
-            "Hiện tại em đang gửi cho bộ phận kiểm tra để duyệt code cho anh/chị.\n"
-            "Trong lúc chờ, anh/chị có thể xem thêm các ưu đãi đặc biệt bên em ở menu dưới nhé 👇"
+            "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.\n"
+            "Lên thành công mình gửi *ảnh chuyển khoản* để em cộng điểm trực tiếp vào tài khoản cho mình ạ.\n\n"
+            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → @my_oanh_u888"
         )
 
-        try:
-            bot.send_photo(
-                chat_id,
-                "AgACAgUAAxkBAAIBbWkln42l0QufAXVKVmH_Qa6oeFhZAALxDGsbpw8pVY05zyDcJpCbAQADAgADeQADNgQ",
-                caption=reply_text,
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            print("Lỗi gửi ảnh xác nhận username:", e)
-            bot.send_message(chat_id, reply_text, parse_mode="Markdown")
+        bot.send_message(chat_id, reply_text, parse_mode="Markdown")
 
-        user_state[chat_id] = None
-        send_main_menu(chat_id)
+        # 👉 chờ ảnh chuyển khoản
+        user_state[chat_id] = "WAITING_RECEIPT"
         return
 
-    # --- Nếu đang chờ khách chọn thể loại game cho ưu đãi nạp đầu x2 ---
-    if user_state.get(chat_id) == "WAITING_GAME_TYPE":
-        if text in ["Bcr - Thể thao", "Nổ hũ - Bắn cá"]:
-            reply_text = (
-                "🎉 Tuyệt vời!\n\n"
-                "Bạn lên vốn thành công vui lòng *gửi hóa đơn chuyển khoản* "
-                "để Bot cộng tiền khuyến mãi x2 cho mình nhé ❤️"
-            )
-
-            try:
-                bot.send_photo(
-                    chat_id,
-                    "AgACAgUAAxkBAAIE4WktS6ovUsUpgeSrjswY5ipZ8t4sAAJnC2sb-JFwVYktGITzeGDeAQADAgADeQADNgQ",  # 👉 THAY file_id ảnh thật của bạn
-                    caption=reply_text,
-                    parse_mode="Markdown"
-                )
-            except Exception as e:
-                print("Lỗi gửi ảnh nạp đầu:", e)
-                bot.send_message(chat_id, reply_text, parse_mode="Markdown")
-
-            user_state[chat_id] = None
-            send_main_menu(chat_id)
-            return
-        else:
-            # Nếu khách gõ linh tinh chứ không bấm nút
-            bot.send_message(chat_id, "Anh/chị chọn giúp em 1 trong 2 nút bên dưới nhé ạ 😊")
-            return
-
-    # ================== MENU 4 NÚT ==================
-
-    # 1. Nhận thưởng nạp đầu x2
-    if text == "Nhận thưởng nạp đầu x2 🧧":
-        ask_text = (
-            "🔥 *Ưu đãi nạp đầu x2 dành riêng cho hội viên mới!*\n\n"
-            "Anh/chị thường chơi thể loại nào để em kích hoạt ưu đãi phù hợp?\n\n"
-            "👉 Vui lòng chọn bên dưới nhé:"
-        )
-
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn_bcr = types.KeyboardButton("Bcr - Thể thao")
-        btn_nohu = types.KeyboardButton("Nổ hũ - Bắn cá")
-        markup.row(btn_bcr, btn_nohu)
-
-        bot.send_message(chat_id, ask_text, reply_markup=markup, parse_mode="Markdown")
-        user_state[chat_id] = "WAITING_GAME_TYPE"
-        return
-
-    # 2. Chia sẻ bạn bè
-    if text == "Chia Sẻ Bạn Bè 👥":
-        share_text = (
-            "🔗 Mỗi lượt giới thiệu thành công, bạn nhận 1500 đ\n"
-            "- 20K khi bạn bè đăng ký & xác nhận tài khoản.\n"
-            "- 50K khi bạn bè nạp tiền lần đầu!\n\n"
-            "👉 Cách tham gia:\n"
-            "1️⃣ Sao chép link này: https://t.me/my_oanh_u888\n"
-            "2️⃣ Gửi bạn bè của bạn.  ( Đủ 30k để quy đổi )\n\n"
-            "📌 Nhận thưởng ngay khi bạn bè tham gia!\n\n"
-            "⚡️ Giới thiệu càng nhiều, nhận càng lớn!"
-        )
-
-        try:
-            bot.send_photo(
-                chat_id,
-                "AgACAgUAAxkBAAIBn2klsGZWE4iS3UO7E9Kj7OzMHd3NAAIODWsbpw8pVRI3ucG9-ZOaAQADAgADeQADNgQ",
-                caption=share_text
-            )
-        except Exception as e:
-            print("Lỗi gửi ảnh chia sẻ bạn bè:", e)
-            bot.send_message(chat_id, share_text)
-        return
-
-    # 3. Nhập code ở livestream
-    if text == "🎁 NHẬP CODE Ở LIVESTREAM":
-        msg = (
-            "Anh/chị có thể nhập CODE nhận thưởng trực tiếp tại đây giúp em nhé 👇\n\n"
-            f"🔗 {CODE_LIVESTREAM_LINK}"
-        )
-
-        try:
-            bot.send_photo(
-                chat_id,
-                "AgACAgUAAxkBAAIBjGklq-uqdpW4yy25J-HRxqGIHAnKAAIDDWsbpw8pVaRLsaHOvgTEAQADAgADeQADNgQ",
-                caption=msg
-            )
-        except Exception as e:
-            print("Lỗi gửi ảnh nhập code livestream:", e)
-            bot.send_message(chat_id, msg)
-        return
-
-    # 4. Săn code 20h
-    if text == "📺 Săn Code lúc 20h hàng ngày":
-        msg = (
-            "⏰ 20H hằng ngày anh/chị vào đây xem livestream để săn CODE 38K – 888K siêu khủng nhé 👇\n\n"
-            f"🔗 {LIVE_LINK}"
-        )
-
-        try:
-            bot.send_photo(
-                chat_id,
-                "AgACAgUAAxkBAAIBnWklsA7Sn1RR4VhqIvQjylGEs_1-AAINDWsbpw8pVX-SihjRXRoFAQADAgADeQADNgQ",
-                caption=msg
-            )
-        except Exception as e:
-            print("Lỗi gửi ảnh săn code 20h:", e)
-            bot.send_message(chat_id, msg)
-        return
-
-    # --- Mặc định: nếu chat linh tinh ngoài flow ---
-    bot.send_message(chat_id, "Dạ để nhận code anh/chị bấm /start giúp em nhé ❤️")
+  
 
 
 # ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
 @bot.message_handler(content_types=['photo', 'document'])
-def handle_photo_get_file_id(message):
-    # Kiểu dữ liệu thực tế Telegram gửi
-    print(">>> CONTENT TYPE:", message.content_type)
+def handle_receipt_photo(message):
+    chat_id = message.chat.id
 
-    if message.content_type == 'photo':
-        # Ảnh gửi kiểu “Photo”
-        file_id = message.photo[-1].file_id
-    elif message.content_type == 'document':
-        # Ảnh gửi kiểu “File/Tài liệu”
-        file_id = message.document.file_id
-    else:
-        return  # Không phải ảnh thì bỏ qua
+    if user_state.get(chat_id) == "WAITING_RECEIPT":
+        # lưu message_id ảnh để gửi cho admin sau
+        user_state[chat_id] = {
+            "state": "WAITING_GAME",
+            "photo_message_id": message.message_id
+        }
 
-    print(">>> FILE_ID ẢNH:", file_id)
-
-    bot.reply_to(
-        message,
-        f"file_id của ảnh/file này là:\n{file_id}"
-    )
+        bot.send_message(
+            chat_id,
+            "Mình muốn chơi *BCR - Thể thao*, *Nổ hũ - Bắn cá* hay *Game bài* ạ?",
+            parse_mode="Markdown"
+        )
+        return
 
 
 # ================== WEBHOOK FLASK ==================
