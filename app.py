@@ -235,7 +235,7 @@ def handle_text(message):
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
             "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.\n"
             "Lên thành công mình gửi *ảnh chuyển khoản* để em cộng điểm trực tiếp vào tài khoản cho mình ạ.\n\n"
-            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → @my_oanh_u888"
+            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → https://t.me/my_oanh_u888"
         )
 
         bot.send_message(chat_id, reply_text, parse_mode="Markdown")
