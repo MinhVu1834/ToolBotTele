@@ -238,7 +238,17 @@ def handle_text(message):
             "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → https://t.me/my_oanh_u888"
         )
 
-        bot.send_message(chat_id, reply_text, parse_mode="Markdown")
+         # ✅ Gửi ảnh kèm caption (fallback sang text nếu lỗi)
+        try:
+            bot.send_photo(
+                chat_id,
+                "FILE_ID_ANH_CUA_BAN",  # 👈 THAY bằng file_id ảnh thật (AgACAgU....)
+                caption=reply_text,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print("Lỗi gửi ảnh reply_text:", e)
+            bot.send_message(chat_id, reply_text, parse_mode="Markdown")
 
         # 👉 chờ ảnh chuyển khoản
         user_state[chat_id] = "WAITING_RECEIPT"
