@@ -83,7 +83,7 @@ def ask_account_status(chat_id):
     try:
         bot.send_photo(
             chat_id,
-            "AgACAgUAAxkBAAIBfWklq1MKg2XIBK3tqH32rSgo4IXcAAICDWsbpw8pVRJBh47k56QWAQADAgADeQADNgQ",
+            "AgACAgUAAxkBAAIE4WktS6ovUsUpgeSrjswY5ipZ8t4sAAJnC2sb-JFwVYktGITzeGDeAQADAgADeQADNgQ",
             caption=text,
             reply_markup=markup
         )
