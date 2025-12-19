@@ -232,11 +232,11 @@ def handle_text(message):
 
         # Ảnh + text xác nhận tài khoản
         reply_text = (
-            f"Em đã nhận được tên tài khoản: <b>{username_game}</b> ✅<br><br>"
-            "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.<br>"
-            "Lên thành công mình gửi <b>ảnh chuyển khoản</b> để em cộng điểm trực tiếp vào tài khoản cho mình ạ.<br><br>"
-            'Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888 → '
-            '<a href="https://t.me/my_oanh_u888">t.me/my_oanh_u888</a>'
+            f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
+            "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.\n"
+            "Lên thành công mình gửi *ảnh chuyển khoản* để em cộng điểm trực tiếp vào tài khoản cho mình ạ.\n\n"
+            "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888:\n"
+            "👉 [Mỹ Oanh](https://t.me/my_oanh_u888)\n\n"
         )
 
          # ✅ Gửi ảnh kèm caption (fallback sang text nếu lỗi)
