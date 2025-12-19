@@ -243,7 +243,7 @@ def handle_text(message):
         try:
             bot.send_photo(
                 chat_id,
-                "AgACAgUAAxkBAAIE4WktS6ovUsUpgeSrjswY5ipZ8t4sAAJnC2sb-JFwVYktGITzeGDeAQADAgADeQADNgQ",  # 👈 THAY bằng file_id ảnh thật (AgACAgU....)
+                "AgACAgUAAxkBAAIBbWkln42l0QufAXVKVmH_Qa6oeFhZAALxDGsbpw8pVY05zyDcJpCbAQADAgADeQADNgQ",  # 👈 THAY bằng file_id ảnh thật (AgACAgU....)
                 caption=reply_text,
                 parse_mode="Markdown"
             )
