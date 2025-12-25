@@ -193,7 +193,7 @@ def handle_text(message):
                     "📩 KHÁCH GỬI CHUYỂN KHOẢN + CHỌN TRÒ CHƠI\n\n"
                     f"👤 Telegram: {tg_username}\n"
                     f"🆔 Chat ID: {chat_id}\n"
-                    f"🎯 Trò chơi: {game_type}"
+                    f"🎯 4 số đuôi tknh : {game_type}"
                 )
             )
 
@@ -280,7 +280,7 @@ def handle_receipt_media(message):
 
     bot.send_message(
         chat_id,
-        "Mình muốn chơi *BCR - Thể Thao*, *Nổ hũ - Bắn Cá* hay *Game bài* ạ?",
+        "Dạ mình vui vòng cho em xin *4 số đuôi* của tài khoản ngân hàng với ạ!",
         parse_mode="Markdown"
     )
 
