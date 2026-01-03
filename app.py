@@ -23,8 +23,9 @@ CSKH_LINK = "https://t.me/my_oanh_u888"
 LIVE_LINK = "https://live.u88899.com/"
 CODE_LIVESTREAM_LINK = "https://u888code.com/"
 
-# Webhook URL (Render env)
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # https://toolbottele-n0cs.onrender.com/webhook
+# Webhook URL (Render env) ví dụ:
+# https://toolbottele-n0cs.onrender.com/webhook
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 # Keep-alive nội bộ (không cần nếu đã dùng UptimeRobot)
 ENABLE_KEEP_ALIVE = os.getenv("ENABLE_KEEP_ALIVE", "false").lower() == "true"
@@ -36,10 +37,11 @@ PING_INTERVAL = int(os.getenv("PING_INTERVAL", "300"))
 bot = telebot.TeleBot(BOT_TOKEN, threaded=True)
 server = Flask(__name__)
 
+# State user (RAM)
 user_state = {}  # {chat_id: "WAITING_USERNAME" hoặc dict}
 
 
-# ================== HÀM KEEP ALIVE ==================
+# ================== HÀM KEEP ALIVE (tuỳ chọn) ==================
 def keep_alive():
     if not PING_URL:
         print("[KEEP_ALIVE] PING_URL chưa cấu hình, không bật keep-alive.")
@@ -176,7 +178,7 @@ def ask_for_username(chat_id):
     user_state[chat_id] = "WAITING_USERNAME"
 
 
-# ================== XỬ LÝ TIN NHẮN TEXT ==================
+# ================== XỬ LÝ TIN NHẮN TEXT (không bắt command) ==================
 @bot.message_handler(func=lambda m: m.text and not m.text.startswith('/'), content_types=['text'])
 def handle_text(message):
     chat_id = message.chat.id
@@ -185,21 +187,29 @@ def handle_text(message):
 
     state = user_state.get(chat_id)
 
+    # Nếu user chưa start mà nhắn linh tinh
+    if state is None:
+        bot.send_message(chat_id, "Anh/chị bấm /start để bắt đầu nhận ưu đãi nhé ạ 😊")
+        return
+
+    # Nếu đang chờ 4 số đuôi
     if isinstance(state, dict) and state.get("state") == "WAITING_GAME":
         four_last_digits = text
         try:
             tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
 
-            bot.send_photo(
-                ADMIN_CHAT_ID,
-                state["receipt_file_id"],
-                caption=(
-                    "📩 KHÁCH GỬI CHUYỂN KHOẢN + 4 SỐ ĐUÔI\n\n"
-                    f"👤 Telegram: {tg_username}\n"
-                    f"🆔 Chat ID: {chat_id}\n"
-                    f"🎯 4 số đuôi tknh : {four_last_digits}"
+            if ADMIN_CHAT_ID != 0:
+                bot.send_photo(
+                    ADMIN_CHAT_ID,
+                    state["receipt_file_id"],
+                    caption=(
+                        "📩 KHÁCH GỬI CHUYỂN KHOẢN + 4 SỐ ĐUÔI\n\n"
+                        f"👤 Telegram: {tg_username}\n"
+                        f"🆔 Chat ID: {chat_id}\n"
+                        f"🎯 4 số đuôi tknh : {four_last_digits}"
+                    )
                 )
-            )
+
             bot.send_message(chat_id, "✅ Em đã nhận đủ thông tin, em xử lý và cộng điểm cho mình ngay nhé ạ ❤️")
         except Exception as e:
             print("Lỗi gửi admin:", e)
@@ -208,7 +218,8 @@ def handle_text(message):
         user_state[chat_id] = None
         return
 
-    if user_state.get(chat_id) == "WAITING_USERNAME":
+    # Nếu đang chờ username
+    if state == "WAITING_USERNAME":
         username_game = text
         tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
         time_str = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
@@ -271,22 +282,32 @@ def handle_receipt_media(message):
     )
 
 
-# ================== WEBHOOK FLASK ==================
+# ================== WEBHOOK FLASK (fix rep chắc chắn) ==================
 @server.route("/webhook", methods=["POST"])
 def telegram_webhook():
     try:
         raw = request.get_data(as_text=True)
-        print(">>> WEBHOOK RAW:", raw[:500])  # in 500 ký tự đầu
+        print(">>> WEBHOOK RAW:", raw[:500])
+
         update = telebot.types.Update.de_json(raw)
-        print(">>> UPDATE:", update)          # xem update có gì
+
+        # ✅ xử lý /start trực tiếp để đảm bảo bot rep
+        if update.message and update.message.text == "/start":
+            chat_id = update.message.chat.id
+            print(">>> DIRECT /start in webhook:", chat_id)
+            ask_account_status(chat_id)
+            return "OK", 200
+
+        # các case khác xử lý theo dispatcher
         bot.process_new_updates([update])
         return "OK", 200
+
     except Exception as e:
         print(">>> WEBHOOK ERROR:", e)
         return "ERR", 500
 
 
-@server.route("/", methods=['GET'])
+@server.route("/", methods=["GET"])
 def home():
     return "Bot is running!", 200
 
