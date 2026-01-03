@@ -6,41 +6,41 @@ import time
 import requests
 import telebot
 from telebot import types
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from flask import Flask, request
 
 # ============ CẤU HÌNH ============
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise RuntimeError("Missing BOT_TOKEN")
+
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 
 REG_LINK = "https://u888u.online"
-WEBAPP_LINK = "https://u888u.online"  # hiện chưa dùng, để sẵn
+WEBAPP_LINK = "https://u888u.online"
 CSKH_LINK = "https://t.me/my_oanh_u888"
 
 LIVE_LINK = "https://live.u88899.com/"
 CODE_LIVESTREAM_LINK = "https://u888code.com/"
 
-# Cấu hình giữ bot "thức"
+# Webhook URL (Render env)
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # https://toolbottele-n0cs.onrender.com/webhook
+
+# Keep-alive nội bộ (không cần nếu đã dùng UptimeRobot)
 ENABLE_KEEP_ALIVE = os.getenv("ENABLE_KEEP_ALIVE", "false").lower() == "true"
 PING_URL = os.getenv("PING_URL")
-PING_INTERVAL = int(os.getenv("PING_INTERVAL", "300"))  # 300 giây = 5 phút
+PING_INTERVAL = int(os.getenv("PING_INTERVAL", "300"))
 
 # ================== KHỞI TẠO BOT & FLASK ==================
 
 bot = telebot.TeleBot(BOT_TOKEN, threaded=True)
 server = Flask(__name__)
 
-# Lưu trạng thái user
-user_state = {}  # {chat_id: "WAITING_USERNAME"}
+user_state = {}  # {chat_id: "WAITING_USERNAME" hoặc dict}
 
 
 # ================== HÀM KEEP ALIVE ==================
 def keep_alive():
-    """
-    Tự ping chính service trên Render để hạn chế bị sleep.
-    Chỉ chạy khi ENABLE_KEEP_ALIVE = true và PING_URL có giá trị.
-    """
     if not PING_URL:
         print("[KEEP_ALIVE] PING_URL chưa cấu hình, không bật keep-alive.")
         return
@@ -55,17 +55,30 @@ def keep_alive():
         time.sleep(PING_INTERVAL)
 
 
-# bật thread keep-alive NGAY KHI file được import (phù hợp cả khi chạy gunicorn)
 if ENABLE_KEEP_ALIVE:
     threading.Thread(target=keep_alive, daemon=True).start()
 
 
+# ================== SET WEBHOOK (quan trọng) ==================
+def setup_webhook():
+    if not WEBHOOK_URL:
+        print("[WEBHOOK] WEBHOOK_URL chưa cấu hình -> bỏ qua set webhook.")
+        return
+    try:
+        bot.remove_webhook()
+        time.sleep(1)
+        ok = bot.set_webhook(url=WEBHOOK_URL)
+        print("[WEBHOOK] set_webhook:", WEBHOOK_URL, "->", ok)
+    except Exception as e:
+        print("[WEBHOOK] Lỗi set webhook:", e)
+
+
+# Gọi luôn khi app start (quan trọng cho gunicorn/Render)
+setup_webhook()
+
+
 # ================== HỎI TRẠNG THÁI TÀI KHOẢN ==================
 def ask_account_status(chat_id):
-    """
-    Gửi 1 ảnh + đoạn hỏi:
-    - Anh/chị đã có tài khoản chơi U888 chưa?
-    """
     text = (
         "👋 Chào anh/chị!\n"
         "Em là Bot hỗ trợ nhận CODE ưu đãi U888.\n\n"
@@ -89,7 +102,6 @@ def ask_account_status(chat_id):
         )
     except Exception as e:
         print("Lỗi gửi ảnh ask_account_status:", e)
-        # fallback: gửi text nếu ảnh lỗi
         bot.send_message(chat_id, text, reply_markup=markup)
 
     user_state[chat_id] = None
@@ -100,8 +112,6 @@ def ask_account_status(chat_id):
 def handle_start(message):
     chat_id = message.chat.id
     print(">>> /start from:", chat_id)
-
-    # Vào thẳng hỏi trạng thái tài khoản (ảnh + text)
     ask_account_status(chat_id)
 
 
@@ -113,8 +123,6 @@ def callback_handler(call):
     print(">>> callback:", data, "from", chat_id)
 
     if data == "no_account":
-        # Nhánh CHƯA CÓ – ĐĂNG KÝ NGAY
-
         text = (
             "Tuyệt vời, em gửi anh/chị link đăng ký nè 👇\n\n"
             f"🔗 Link đăng ký: {REG_LINK}\n\n"
@@ -125,7 +133,6 @@ def callback_handler(call):
         btn_done = types.InlineKeyboardButton("✅ MÌNH ĐĂNG KÝ XONG RỒI", callback_data="registered_done")
         markup.row(btn_done)
 
-        # Xoá inline cũ (nếu muốn) rồi gửi tin mới
         try:
             bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
         except Exception as e:
@@ -143,7 +150,6 @@ def callback_handler(call):
             bot.send_message(chat_id, text, reply_markup=markup)
 
     elif data in ("have_account", "registered_done"):
-        # Nhánh ĐÃ CÓ TÀI KHOẢN hoặc MÌNH ĐĂNG KÝ XONG RỒI
         ask_for_username(chat_id)
 
 
@@ -180,42 +186,33 @@ def handle_text(message):
     state = user_state.get(chat_id)
 
     if isinstance(state, dict) and state.get("state") == "WAITING_GAME":
-        game_type = text
-
+        four_last_digits = text
         try:
             tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
 
-            # Gửi ảnh chuyển khoản cho admin
             bot.send_photo(
                 ADMIN_CHAT_ID,
                 state["receipt_file_id"],
                 caption=(
-                    "📩 KHÁCH GỬI CHUYỂN KHOẢN + CHỌN TRÒ CHƠI\n\n"
+                    "📩 KHÁCH GỬI CHUYỂN KHOẢN + 4 SỐ ĐUÔI\n\n"
                     f"👤 Telegram: {tg_username}\n"
                     f"🆔 Chat ID: {chat_id}\n"
-                    f"🎯 4 số đuôi tknh : {game_type}"
+                    f"🎯 4 số đuôi tknh : {four_last_digits}"
                 )
             )
-
             bot.send_message(chat_id, "✅ Em đã nhận đủ thông tin, em xử lý và cộng điểm cho mình ngay nhé ạ ❤️")
         except Exception as e:
             print("Lỗi gửi admin:", e)
             bot.send_message(chat_id, "⚠️ Em gửi thông tin bị lỗi, mình đợi em 1 chút hoặc nhắn CSKH giúp em nhé ạ.")
 
-        except Exception as e:
-            print("Lỗi gửi admin:", e)
-
         user_state[chat_id] = None
         return
-    
 
-    # --- Nếu đang chờ user gửi tên tài khoản ---
     if user_state.get(chat_id) == "WAITING_USERNAME":
         username_game = text
         tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
         time_str = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
 
-        # Gửi cho admin
         admin_text = (
             "🔔 Có khách mới gửi thông tin nhận code\n\n"
             f"👤 Telegram: {tg_username}\n"
@@ -224,26 +221,24 @@ def handle_text(message):
             f"🆔 Chat ID: {chat_id}"
         )
         try:
-            bot.send_message(ADMIN_CHAT_ID, admin_text)
-            # 👉 Forward tin nhắn gốc của khách
-            bot.forward_message(ADMIN_CHAT_ID, chat_id, message.message_id)
+            if ADMIN_CHAT_ID != 0:
+                bot.send_message(ADMIN_CHAT_ID, admin_text)
+                bot.forward_message(ADMIN_CHAT_ID, chat_id, message.message_id)
         except Exception as e:
             print("Lỗi gửi tin cho admin:", e)
 
-        # Ảnh + text xác nhận tài khoản
         reply_text = (
             f"Em đã nhận được tên tài khoản: *{username_game}* ✅\n\n"
             "Mình vào U888 lên vốn theo mốc để nhận khuyến mãi giúp em nhé.\n"
             "Lên thành công mình gửi *ảnh chuyển khoản* để em cộng điểm trực tiếp vào tài khoản cho mình ạ.\n\n"
             "Có bất cứ thắc mắc gì nhắn tin trực tiếp cho CSKH U888:\n"
-            "👉 [Mỹ Oanh](https://t.me/my_oanh_u888)\n\n"
+            f"👉 [Mỹ Oanh]({CSKH_LINK})\n\n"
         )
 
-         # ✅ Gửi ảnh kèm caption (fallback sang text nếu lỗi)
         try:
             bot.send_photo(
                 chat_id,
-                "AgACAgUAAxkBAAIBbWkln42l0QufAXVKVmH_Qa6oeFhZAALxDGsbpw8pVY05zyDcJpCbAQADAgADeQADNgQ",  # 👈 THAY bằng file_id ảnh thật (AgACAgU....)
+                "AgACAgUAAxkBAAIBbWkln42l0QufAXVKVmH_Qa6oeFhZAALxDGsbpw8pVY05zyDcJpCbAQADAgADeQADNgQ",
                 caption=reply_text,
                 parse_mode="Markdown"
             )
@@ -251,50 +246,42 @@ def handle_text(message):
             print("Lỗi gửi ảnh reply_text:", e)
             bot.send_message(chat_id, reply_text, parse_mode="Markdown")
 
-        # 👉 chờ ảnh chuyển khoản
         user_state[chat_id] = "WAITING_RECEIPT"
         return
 
-  
 
-
-# ================== LẤY FILE_ID ẢNH (TẠM DÙNG ĐỂ LẤY ID) ==================
+# ================== NHẬN ẢNH/FILE CHUYỂN KHOẢN ==================
 @bot.message_handler(content_types=['photo', 'document'])
 def handle_receipt_media(message):
     chat_id = message.chat.id
-
     if user_state.get(chat_id) != "WAITING_RECEIPT":
         return
 
-    # Lấy file_id đúng theo loại media
     if message.content_type == "photo":
         receipt_file_id = message.photo[-1].file_id
-    else:  # document
+    else:
         receipt_file_id = message.document.file_id
 
-    # Lưu lại để lát khách chọn game xong gửi cho admin
-    user_state[chat_id] = {
-        "state": "WAITING_GAME",
-        "receipt_file_id": receipt_file_id
-    }
+    user_state[chat_id] = {"state": "WAITING_GAME", "receipt_file_id": receipt_file_id}
 
     bot.send_message(
         chat_id,
-        "Dạ mình vui vòng cho em xin *4 số đuôi* của tài khoản ngân hàng với ạ!",
+        "Dạ mình vui lòng cho em xin *4 số đuôi* của tài khoản ngân hàng với ạ!",
         parse_mode="Markdown"
     )
 
 
 # ================== WEBHOOK FLASK ==================
-
 @server.route("/webhook", methods=['POST'])
 def telegram_webhook():
-    print(">>> Got update from Telegram")
-    json_str = request.get_data().decode("utf-8")
-    # HÀM ĐÚNG: Update.de_json (có dấu chấm, không phải Update_de_json)
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return "OK", 200
+    try:
+        json_str = request.get_data().decode("utf-8")
+        update = telebot.types.Update.de_json(json_str)
+        bot.process_new_updates([update])
+        return "OK", 200
+    except Exception as e:
+        print("WEBHOOK ERROR:", e)
+        return "ERR", 500
 
 
 @server.route("/", methods=['GET'])
