@@ -177,7 +177,7 @@ def ask_for_username(chat_id):
 
 
 # ================== XỬ LÝ TIN NHẮN TEXT ==================
-@bot.message_handler(func=lambda message: True, content_types=['text'])
+@bot.message_handler(func=lambda m: m.text and not m.text.startswith('/'), content_types=['text'])
 def handle_text(message):
     chat_id = message.chat.id
     text = message.text.strip()
