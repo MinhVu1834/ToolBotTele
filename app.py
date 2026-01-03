@@ -272,15 +272,17 @@ def handle_receipt_media(message):
 
 
 # ================== WEBHOOK FLASK ==================
-@server.route("/webhook", methods=['POST'])
+@server.route("/webhook", methods=["POST"])
 def telegram_webhook():
     try:
-        json_str = request.get_data().decode("utf-8")
-        update = telebot.types.Update.de_json(json_str)
+        raw = request.get_data(as_text=True)
+        print(">>> WEBHOOK RAW:", raw[:500])  # in 500 ký tự đầu
+        update = telebot.types.Update.de_json(raw)
+        print(">>> UPDATE:", update)          # xem update có gì
         bot.process_new_updates([update])
         return "OK", 200
     except Exception as e:
-        print("WEBHOOK ERROR:", e)
+        print(">>> WEBHOOK ERROR:", e)
         return "ERR", 500
 
 
