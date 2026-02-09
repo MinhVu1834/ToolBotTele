@@ -1,3 +1,5 @@
+# app.py (updated: Supabase/Postgres logging for telegram_users + leads)
+
 import os
 from datetime import datetime
 import threading
@@ -7,6 +9,9 @@ import requests
 import telebot
 from telebot import types
 from flask import Flask, request
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # ============ CẤU HÌNH ============
 
@@ -27,6 +32,124 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 ENABLE_KEEP_ALIVE = os.getenv("ENABLE_KEEP_ALIVE", "false").lower() == "true"
 PING_URL = os.getenv("PING_URL")  # ví dụ: https://toolbottele-n0cs.onrender.com/
 PING_INTERVAL = int(os.getenv("PING_INTERVAL", "300"))  # 300 giây = 5 phút
+
+# ================== DATABASE (Supabase Postgres) ==================
+
+DATABASE_URL = os.getenv("DATABASE_URL")  # set trên Render env
+_db_conn = None
+
+
+def get_db():
+    """
+    Lazy connect + auto-reconnect if dropped.
+    """
+    global _db_conn
+    if not DATABASE_URL:
+        raise RuntimeError("Missing DATABASE_URL")
+    try:
+        if _db_conn is None or _db_conn.closed != 0:
+            _db_conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+            _db_conn.autocommit = True
+        return _db_conn
+    except Exception:
+        _db_conn = None
+        raise
+
+
+def init_db():
+    """
+    Create minimal tables if not exist.
+    """
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+        create table if not exists telegram_users (
+          id bigserial primary key,
+          tg_chat_id bigint unique not null,
+          tg_username text,
+          first_name text,
+          last_name text,
+          phone text,
+          created_at timestamptz default now(),
+          updated_at timestamptz default now()
+        );
+        """)
+        cur.execute("""
+        create table if not exists leads (
+          id bigserial primary key,
+          tg_chat_id bigint,
+          username_game text,
+          game_type text,
+          receipt_file_id text,
+          status text default 'new',
+          note text,
+          created_at timestamptz default now()
+        );
+        """)
+        cur.execute("create index if not exists idx_leads_chat on leads(tg_chat_id);")
+
+
+def upsert_telegram_user(message):
+    """
+    Upsert basic Telegram profile.
+    """
+    conn = get_db()
+    chat_id = message.chat.id
+    tg_username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+
+    with conn.cursor() as cur:
+        cur.execute("""
+        insert into telegram_users (tg_chat_id, tg_username, first_name, last_name, updated_at)
+        values (%s, %s, %s, %s, now())
+        on conflict (tg_chat_id)
+        do update set
+          tg_username = excluded.tg_username,
+          first_name = excluded.first_name,
+          last_name = excluded.last_name,
+          updated_at = now()
+        """, (chat_id, tg_username, first_name, last_name))
+
+
+def create_lead(chat_id, status="new", username_game=None, game_type=None, receipt_file_id=None, note=None):
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+        insert into leads (tg_chat_id, status, username_game, game_type, receipt_file_id, note)
+        values (%s, %s, %s, %s, %s, %s)
+        returning id
+        """, (chat_id, status, username_game, game_type, receipt_file_id, note))
+        row = cur.fetchone()
+        return row["id"] if row else None
+
+
+def update_latest_lead(chat_id, **fields):
+    """
+    Update the most recent lead of this chat_id.
+    """
+    if not fields:
+        return
+    conn = get_db()
+    sets = []
+    vals = []
+    for k, v in fields.items():
+        sets.append(f"{k} = %s")
+        vals.append(v)
+    vals.append(chat_id)
+
+    with conn.cursor() as cur:
+        cur.execute(f"""
+        update leads
+        set {", ".join(sets)}
+        where id = (
+          select id from leads
+          where tg_chat_id = %s
+          order by created_at desc
+          limit 1
+        )
+        """, vals)
+
 
 # ================== KHỞI TẠO BOT & FLASK ==================
 
@@ -85,6 +208,13 @@ def setup_webhook():
 # Gọi luôn khi app start (đúng cho gunicorn/Render)
 setup_webhook()
 
+# Init DB at startup (log only, do not crash bot if DB temporarily unreachable)
+try:
+    init_db()
+    print("[DB] init ok")
+except Exception as e:
+    print("[DB] init error:", e)
+
 
 # ================== DEBUG GET FILE_ID ==================
 @bot.message_handler(commands=['getid'])
@@ -141,6 +271,14 @@ def ask_account_status(chat_id):
 def handle_start(message):
     chat_id = message.chat.id
     print(">>> /start from:", chat_id)
+
+    # DB log
+    try:
+        upsert_telegram_user(message)
+        create_lead(chat_id, status="started", note="start")
+    except Exception as e:
+        print("[DB] /start error:", e)
+
     ask_account_status(chat_id)
 
 
@@ -152,6 +290,12 @@ def callback_handler(call):
     print(">>> callback:", data, "from", chat_id)
 
     if data == "no_account":
+        # DB log (optional)
+        try:
+            update_latest_lead(chat_id, status="no_account_clicked", note="clicked no_account")
+        except Exception as e:
+            print("[DB] no_account click error:", e)
+
         text = (
             "Tuyệt vời, em gửi anh/chị link đăng ký nè 👇\n\n"
             f"🔗 Link đăng ký: {REG_LINK}\n\n"
@@ -179,6 +323,12 @@ def callback_handler(call):
             bot.send_message(chat_id, text, reply_markup=markup)
 
     elif data in ("have_account", "registered_done"):
+        # DB log
+        try:
+            update_latest_lead(chat_id, status="ready_for_username", note=data)
+        except Exception as e:
+            print("[DB] have_account/registered_done error:", e)
+
         ask_for_username(chat_id)
 
 
@@ -218,6 +368,12 @@ def handle_text(message):
     if isinstance(state, dict) and state.get("state") == "WAITING_GAME":
         game_type = text
 
+        # DB log
+        try:
+            update_latest_lead(chat_id, status="done", game_type=game_type, note="game selected")
+        except Exception as e:
+            print("[DB] save game_type error:", e)
+
         try:
             tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
             time_str = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
@@ -228,7 +384,7 @@ def handle_text(message):
                 caption=(
                     "📩 KHÁCH GỬI CHUYỂN KHOẢN + CHỌN TRÒ CHƠI\n\n"
                     f"👤 Telegram: {tg_username}\n"
-                    f"🧾 Tên tài khoản: {state.get('username_game','(không rõ)')}\n"
+                    f"🧾 Tên tài khoản: {state.get('username_game', '(không rõ)')}\n"
                     f"🆔 Chat ID: {chat_id}\n"
                     f"🎯 Trò chơi: {game_type}\n"
                     f"⏰ Thời gian: {time_str}"
@@ -246,6 +402,13 @@ def handle_text(message):
     # --- Nếu đang chờ user gửi tên tài khoản ---
     if state == "WAITING_USERNAME":
         username_game = text
+
+        # DB log (create a new lead for this username)
+        try:
+            create_lead(chat_id, status="got_username", username_game=username_game, note="username received")
+        except Exception as e:
+            print("[DB] save username_game error:", e)
+
         tg_username = f"@{message.from_user.username}" if message.from_user.username else "Không có"
         time_str = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
 
@@ -320,6 +483,12 @@ def handle_media(message):
     else:
         bot.send_message(chat_id, "Mình gửi *ảnh chuyển khoản* giúp em nhé ạ.", parse_mode="Markdown")
         return
+
+    # DB log
+    try:
+        update_latest_lead(chat_id, status="got_receipt", receipt_file_id=receipt_file_id, note="receipt received")
+    except Exception as e:
+        print("[DB] save receipt error:", e)
 
     user_state[chat_id] = {
         "state": "WAITING_GAME",
